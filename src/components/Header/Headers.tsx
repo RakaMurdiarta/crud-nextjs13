@@ -1,20 +1,29 @@
 "use client";
 
 import { ISession } from "@/types/types";
-import { IUser } from "../../../models/user";
 import Container from "../Container";
 import { useSession, signIn, signOut } from "next-auth/react";
-
-interface IUserq {
-  user: IUser;
-}
+import { useRouter } from "next/navigation";
 
 const Headers = () => {
-  const { data, status } = useSession();
+  const { data, status, update } = useSession();
+  const router = useRouter();
+
+  const logout = async () => {
+    const response = await fetch("http://localhost:3000/api/logout");
+
+    if (response.ok) {
+      // Mengatur ulang halaman setelah logout
+      signOut();
+    } else {
+      // Penanganan kesalahan jika gagal logout
+      console.error("Gagal logout");
+    }
+  };
 
   const user: ISession | undefined = data?.user as ISession | undefined;
-  // Dalam konteks ini, Anda menggunakan as ISession untuk memberi tahu TypeScript bahwa Anda yakin bahwa sessionData?.user memiliki tipe ISession atau dapat dianggap sebagai ISession. Dengan demikian, Anda dapat menetapkan hasil ekspresi tersebut ke dalam variabel user yang memiliki tipe ISession | undefined.
-  console.log(data, status);
+  //Note: Dalam konteks ini, Anda menggunakan as ISession untuk memberi tahu TypeScript bahwa Anda yakin bahwa sessionData?.user memiliki tipe ISession atau dapat dianggap sebagai ISession. Dengan demikian, Anda dapat menetapkan hasil ekspresi tersebut ke dalam variabel user yang memiliki tipe ISession | undefined.
+
   return (
     <header className="bg-fuchsia-600 sticky left-0 top-0">
       <Container>
@@ -35,7 +44,7 @@ const Headers = () => {
               ) : (
                 <li
                   onClick={() => {
-                    signOut();
+                    logout();
                   }}
                 >
                   Logout

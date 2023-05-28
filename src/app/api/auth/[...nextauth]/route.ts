@@ -6,9 +6,11 @@ import { NextResponse } from "next/server";
 import { compare } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 import { ISession } from "@/types/types";
+import { setCookie } from "nookies";
+import { cookies } from "next/headers";
 
 export const authOptions: NextAuthOptions = {
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 60 * 60 * 1 },
   providers: [
     CredentialsProvider({
       id: "credentials",
@@ -65,6 +67,17 @@ export const authOptions: NextAuthOptions = {
           refreshToken: refreshToken,
         };
 
+        // setCookie({}, "refreshToken", refreshToken, {
+        //   maxAge: 60 * 60 * 1,
+        //   path: "/",
+        // });
+        cookies().set({
+          name: "refreshToken",
+          value: refreshToken,
+          httpOnly: true,
+          path: "/",
+        });
+
         return user;
       },
     }),
@@ -72,7 +85,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       user && (token.user = user);
-      
+
       return token;
     },
     async session({ session, token }) {
