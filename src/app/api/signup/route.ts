@@ -5,7 +5,7 @@ import User, { IUser } from "../../../../models/user";
 import mongoose from "mongoose";
 
 export async function POST(request: Request) {
-  connectDB().catch((err) => NextResponse.json({ err: err }));
+  await connectDB().catch((err) => NextResponse.json({ err: err }));
   // console.log(await request.json())
   if (request.method === "POST") {
     const { fullname, email, password } = await request.json();
@@ -13,12 +13,12 @@ export async function POST(request: Request) {
     const userExist = await User.findOne({ email: email });
     console.log("user", userExist);
     if (userExist) {
-      return NextResponse.json({ msg: "user exist" });
+      return NextResponse.json({ msg: "user exist" },{status : 409});
     } else {
       if (password.length < 6) {
         return NextResponse.json(
           { msg: "password should be 6 character" },
-          { status: 404, statusText: "conflict woiii" }
+          { status: 403 }
         );
       }
 
@@ -39,18 +39,18 @@ export async function POST(request: Request) {
           email: user.email,
           id: user._id,
         };
-        return NextResponse.json(
-          { msg: resp },
-          { status: 200, statusText: "oke" }
-        );
+
+        return NextResponse.json(resp, { status: 200});
       } catch (error: unknown) {
         if (error instanceof mongoose.Error.ValidationError) {
+          // return NextResponse.json({ msg: error }, { status: 409 });
           for (let field in error.errors) {
-            console.log(field)
+            console.log(field);
             const msg = error.errors[field].message;
             return NextResponse.json({ msg: msg }, { status: 409 });
           }
         }
+        return NextResponse.json({ msg: error });
       }
     }
   }
