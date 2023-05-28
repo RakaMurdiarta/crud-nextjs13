@@ -4,6 +4,8 @@ import User, { IUser } from "../../../../../models/user";
 import { connectDB } from "@/lib/ConnectDB";
 import { NextResponse } from "next/server";
 import { compare } from "bcryptjs";
+import { sign } from "jsonwebtoken";
+import { ISession } from "@/types/types";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -34,12 +36,33 @@ export const authOptions: NextAuthOptions = {
         if (!comparePass) {
           throw new Error("Invalid Credentials");
         }
+
+        const jwtToken = sign(
+          {
+            id: resp._id,
+            fullname: resp.fullname,
+            email: resp.email,
+          },
+          process.env.JWT_SECRET!,
+          { expiresIn: "1h" }
+        );
+
+        const refreshToken = sign(
+          {
+            id: resp._id,
+            fullname: resp.fullname,
+            email: resp.email,
+          },
+          process.env.JWT_REFRESH!,
+          { expiresIn: "2d" }
+        );
+
         const user = {
           id: resp?._id.toString(),
           email: resp?.email,
           fullname: resp?.fullname,
-          accessToken: "dadad",
-          refreshToken: "afaf",
+          accessToken: jwtToken,
+          refreshToken: refreshToken,
         };
 
         return user;
@@ -49,11 +72,11 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       user && (token.user = user);
-      console.log(token);
+      
       return token;
     },
     async session({ session, token }) {
-      session.user = token.user as any;
+      session.user = token.user as ISession;
       return session;
     },
   },

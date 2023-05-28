@@ -11,9 +11,9 @@ export async function POST(request: Request) {
     const { fullname, email, password } = await request.json();
 
     const userExist = await User.findOne({ email: email });
-    console.log("user", userExist);
+
     if (userExist) {
-      return NextResponse.json({ msg: "user exist" },{status : 409});
+      return NextResponse.json({ msg: "user exist" }, { status: 409 });
     } else {
       if (password.length < 6) {
         return NextResponse.json(
@@ -23,9 +23,6 @@ export async function POST(request: Request) {
       }
 
       const hashpass = await hash(password, 12);
-      console.log("hash", hashpass);
-
-      console.log(fullname, email, password);
 
       try {
         const user: IUser = await User.create({
@@ -40,12 +37,11 @@ export async function POST(request: Request) {
           id: user._id,
         };
 
-        return NextResponse.json(resp, { status: 200});
+        return NextResponse.json(resp, { status: 200 });
       } catch (error: unknown) {
         if (error instanceof mongoose.Error.ValidationError) {
           // return NextResponse.json({ msg: error }, { status: 409 });
           for (let field in error.errors) {
-            console.log(field);
             const msg = error.errors[field].message;
             return NextResponse.json({ msg: msg }, { status: 409 });
           }
